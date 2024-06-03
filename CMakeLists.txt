@@ -32,12 +32,7 @@ if(WIN32)
     add_definitions(-DPLATFORM_WINDOWS)
     # Add platform-specific source files
     file(GLOB PLATFORM_SOURCES ${CMAKE_SOURCE_DIR}/platforms/windows/src/*.cpp)
-elseif(UNIX AND NOT ANDROID)
-    include_directories(${CMAKE_SOURCE_DIR}/platforms/linux/include)
-    link_directories(${CMAKE_SOURCE_DIR}/platforms/linux/lib)
-    add_definitions(-DPLATFORM_LINUX)
-    # Add platform-specific source files
-    file(GLOB PLATFORM_SOURCES ${CMAKE_SOURCE_DIR}/platforms/linux/src/*.cpp)
+
     
 # elseif(ANDROID)
 #     include_directories(${CMAKE_SOURCE_DIR}/platforms/android/include)
@@ -47,13 +42,18 @@ elseif(UNIX AND NOT ANDROID)
 #     set(PLATFORM_SOURCES
 #         ${CMAKE_SOURCE_DIR}/platforms/android/src/*.cpp
 #     )
-elseif(WASM)
+elseif(EMSCRIPTEN)
     include_directories(${CMAKE_SOURCE_DIR}/platforms/wasm/include)
     link_directories(${CMAKE_SOURCE_DIR}/platforms/wasm/lib)
     add_definitions(-DPLATFORM_WASM)
     # Add platform-specific source files
     file(GLOB PLATFORM_SOURCES ${CMAKE_SOURCE_DIR}/platforms/wasm/src/*.cpp)
-
+elseif(UNIX AND NOT ANDROID)
+    include_directories(${CMAKE_SOURCE_DIR}/platforms/linux/include)
+    link_directories(${CMAKE_SOURCE_DIR}/platforms/linux/lib)
+    add_definitions(-DPLATFORM_LINUX)
+    # Add platform-specific source files
+    file(GLOB PLATFORM_SOURCES ${CMAKE_SOURCE_DIR}/platforms/linux/src/*.cpp)
 endif()
 
 # Add common source files
@@ -75,21 +75,19 @@ add_executable(${PROJECT_NAME} ${COMMON_SOURCES} ${PLATFORM_SOURCES})
 
 # endif()
 
-if(BUILD_SHARED_LIBS)
+if(EMSCRIPTEN)
+    target_link_libraries(${PROJECT_NAME} raylib)
+elseif(BUILD_SHARED_LIBS)
     if(WIN32)
         target_link_libraries(${PROJECT_NAME} winmm ${CMAKE_SOURCE_DIR}/platforms/windows/lib/raylibdll.lib)
     elseif(UNIX AND NOT ANDROID)
         target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/platforms/linux/lib/libraylib.so)
-    elseif(WASM)
-        target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/platforms/wasm/lib/libraylib.a)
     endif()
 else()
     if(WIN32)
         target_link_libraries(${PROJECT_NAME} winmm ${CMAKE_SOURCE_DIR}/platforms/windows/lib/raylib.lib)
     elseif(UNIX AND NOT ANDROID)
         target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/platforms/linux/lib/libraylib.a)
-    elseif(WASM)
-        target_link_libraries(${PROJECT_NAME} ${CMAKE_SOURCE_DIR}/platforms/wasm/lib/libraylib.a)
     endif()
 endif()
 target_compile_definitions(${PROJECT_NAME} PUBLIC ASSETS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/assets/")
